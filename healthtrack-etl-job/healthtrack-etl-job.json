@@ -1,0 +1,39 @@
+{
+  "name" : "healthtrack-etl-job",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::727646469037:role/service-role/AWSGlueServiceRole-healthtrack",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-727646469037-eu-west-3/scripts/healthtrack-etl-job.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "true",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-727646469037-eu-west-3/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-727646469037-eu-west-3/temporary/"
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.0",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1748885344324\":{\"S3CsvSource\":{\"AdditionalOptions\":{\"EnableSamplePath\":false,\"SamplePath\":\"s3://healthtrack-datalake/raw/structured/measurements.csv\"},\"Escaper\":\"\",\"Exclusions\":[],\"Name\":\"Amazon S3\",\"OptimizePerformance\":false,\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"timestamp\",\"Type\":\"string\"},{\"Name\":\"patient_id\",\"Type\":\"string\"},{\"Name\":\"heart_rate\",\"Type\":\"string\"},{\"Name\":\"blood_pressure\",\"Type\":\"string\"},{\"Name\":\"glucose_level\",\"Type\":\"string\"}]}],\"Paths\":[\"s3://healthtrack-datalake/raw/structured/\"],\"QuoteChar\":\"quote\",\"Recurse\":true,\"Separator\":\"comma\",\"WithHeader\":true}},\"node-1748885425105\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1748883076152\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1748936202636\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://healthtrack-datalake/processed/structured/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false,\"UpdateBehavior\":\"LOG\"}}},\"node-1748936202636\":{\"SelectFromCollection\":{\"Index\":0,\"Inputs\":[\"node-1748935914560\"],\"Name\":\"Select From Collection\"}},\"node-1748900247463\":{\"DropDuplicates\":{\"Columns\":[],\"Inputs\":[\"node-1748885344324\"],\"Name\":\"Drop Duplicates\"}},\"node-1748935914560\":{\"CustomCode\":{\"ClassName\":\"MyTransform\",\"Code\":\"from pyspark.sql.functions import col\\nfrom awsglue.dynamicframe import DynamicFrame\\nfrom awsglue.dynamicframe import DynamicFrameCollection\\n\\ndynamicframe = dfc.select(list(dfc.keys())[0])\\ndf = dynamicframe.toDF()\\nfiltered_df = df.filter((col(\\\"patient_id\\\").isNotNull()) & (col(\\\"patient_id\\\") != \\\"\\\"))\\nfiltered_dynamicframe = DynamicFrame.fromDF(filtered_df, glueContext, \\\"filtered_dynamicframe\\\")\\n\\n# Encapsuler dans un dictionnaire et retourner en DynamicFrameCollection\\nreturn DynamicFrameCollection({\\\"filtered_dynamicframe\\\": filtered_dynamicframe}, glueContext)\\n\",\"Inputs\":[\"node-1748900247463\"],\"Name\":\"Drop patient_id null\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"timestamp\",\"Type\":\"string\"},{\"Name\":\"patient_id\",\"Type\":\"string\"},{\"Name\":\"heart_rate\",\"Type\":\"string\"},{\"Name\":\"blood_pressure\",\"Type\":\"string\"},{\"Name\":\"glucose_level\",\"Type\":\"string\"}]}]}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "healthtrack-etl-job",
+    "branch" : "main",
+    "folder" : "healthtrack-etl-job"
+  }
+}
